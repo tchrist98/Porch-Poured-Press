@@ -20,6 +20,57 @@
     --merlot: #5C1A2B;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
+  .shop-tile{
+    position:relative;
+    background: var(--cream-deep);
+    border: 1px solid rgba(159,96,59,0.28);
+    border-radius: 2px;
+    padding: 1.4rem;
+    display:flex; flex-direction:column; gap:0.5rem;
+    transition: transform 0.35s cubic-bezier(.22,1,.36,1), box-shadow 0.35s ease, border-color 0.35s ease;
+  }
+  .shop-tile:hover{
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px rgba(74,36,54,0.12);
+    border-color: rgba(159,96,59,0.45);
+  }
+  .shop-tile h3{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:1.15rem;
+    color: var(--plum-deep);
+  }
+  .shop-tile p{
+    font-size:0.85rem;
+    color: var(--ink);
+    opacity:0.75;
+  }
+  .shop-tile button{
+    margin-top:0.4rem;
+    background: var(--copper-deep);
+    color: var(--cream);
+    border:none;
+    padding:0.6rem 1rem;
+    font-size:0.7rem;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition: background 0.25s ease;
+  }
+  .shop-tile button:hover{ background: var(--merlot); }
+  .shop-tile button:disabled{ opacity:0.4; cursor:not-allowed; }
+  .cart-line{
+    display:flex; justify-content:space-between; align-items:center;
+    gap:0.5rem; margin-bottom:0.5rem;
+  }
+  .cart-line input{
+    width:45px; font-family:'Karla', sans-serif;
+    border:1px solid rgba(159,96,59,0.3); text-align:center;
+  }
+  .cart-total{
+    font-weight:600; margin-top:0.8rem;
+    border-top:1px solid rgba(159,96,59,0.3); padding-top:0.6rem;
+  }
   html{scroll-behavior:smooth;}
   body{
     background: var(--cream);
@@ -307,13 +358,13 @@
 </section>
 
 <div class="tiles">
-  <a class="tile wide" id="books" href="#">
+  <a class="tile wide" id="books" href="#books-section">
     <h3>Books</h3>
     <p>Small-town romantic suspense &amp; confessional poetry.</p>
     <span class="go">Browse the shelf <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
   </a>
 
-  <a class="tile wide" id="merch" href="#">
+  <a class="tile wide" id="merch" href="#merch-section">
     <h3>Merch</h3>
     <p>Postcards, recipe cards, menus, bookmarks, poem &amp; quote prints, stickers.</p>
     <span class="go">Take a look <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
@@ -344,6 +395,29 @@
   </a>
 </div>
 
+<section id="books-section" style="max-width:1140px; margin:2vh auto; padding:0 6vw;">
+  <h2 style="font-family:'Fraunces', serif; font-weight:500; font-size:1.8rem; color:var(--plum-deep); margin-bottom:1.2rem;">Books</h2>
+  <div id="books-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:1.4rem;"></div>
+</section>
+
+<section id="merch-section" style="max-width:1140px; margin:4vh auto; padding:0 6vw;">
+  <h2 style="font-family:'Fraunces', serif; font-weight:500; font-size:1.8rem; color:var(--plum-deep); margin-bottom:1.2rem;">Merch</h2>
+  <div id="merch-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:1.4rem;"></div>
+</section>
+
+<section id="cart-section" style="max-width:600px; margin:4vh auto; padding:2rem 6vw; background:var(--cream-deep); border:1px solid rgba(159,96,59,0.28);">
+  <h2 style="font-family:'Fraunces', serif; font-weight:500; font-size:1.4rem; color:var(--plum-deep); margin-bottom:1rem;">
+    Your Cart (<span id="cart-count">0</span>)
+  </h2>
+  <div id="cart-drawer" style="font-size:0.9rem; margin-bottom:1.5rem;"></div>
+
+  <h3 style="font-family:'Fraunces', serif; font-weight:500; font-size:1.1rem; color:var(--plum-deep); margin-bottom:0.8rem;">Checkout</h3>
+  <div id="card-container" style="margin-bottom:1rem;"></div>
+  <button id="checkout-button" style="background:var(--plum-deep); color:var(--cream); border:none; padding:0.8rem 2rem; font-size:0.75rem; letter-spacing:0.14em; text-transform:uppercase; cursor:pointer;">
+    Pay now
+  </button>
+</section>
+
 <p class="home-line">"I hope you find a piece of home in these pages."</p>
 
 <section class="letter-strip">
@@ -361,7 +435,17 @@
   <span class="label">A different kind of evening</span>
   <h2>PPP After Dark</h2>
   <p>Dark romance from Saylor Delahaye. Same porch, dimly lit &mdash; wine instead of tea.</p>
-  <a class="enter" href="#">Enter After Dark</a>
+  <a class="enter" href="#after-dark-shop">Enter After Dark</a>
+</section>
+
+<section id="after-dark-shop" style="position:relative; background:#1c0d12; padding:6vh 6vw; z-index:1;">
+  <div style="max-width:1140px; margin:0 auto;">
+    <h3 style="font-family:'Fraunces', serif; font-style:italic; font-weight:400; font-size:1.5rem; color:#EAD9C8; margin-bottom:1.2rem;">Books</h3>
+    <div id="after-dark-books-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:1.4rem; margin-bottom:3rem;"></div>
+
+    <h3 style="font-family:'Fraunces', serif; font-style:italic; font-weight:400; font-size:1.5rem; color:#EAD9C8; margin-bottom:1.2rem;">Merch</h3>
+    <div id="after-dark-merch-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:1.4rem;"></div>
+  </div>
 </section>
 
 <footer>
@@ -371,5 +455,7 @@
   </div>
 </footer>
 
+<script src="https://sandbox.web.squarecdn.com/v1/square.js"></script>
+<script src="cart.js" defer></script>
 </body>
 </html>
