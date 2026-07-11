@@ -93,19 +93,17 @@ function renderCartDrawer() {
     `<div class="cart-total">Total: $${cartTotal().toFixed(2)}</div>`;
 }
 
-async function renderShopGrid() {
-  const grid = document.getElementById("shop-grid");
-  if (!grid) return;
-
-  grid.innerHTML = "<p>Loading products…</p>";
+async function loadProducts() {
+  const booksGrid = document.getElementById("books-grid");
+  const merchGrid = document.getElementById("merch-grid");
+  if (booksGrid) booksGrid.innerHTML = "<p>Loading books…</p>";
+  if (merchGrid) merchGrid.innerHTML = "<p>Loading merch…</p>";
 
   try {
     const res = await fetch("/api/catalog");
     const { products } = await res.json();
 
-    grid.innerHTML = products
-      .map(
-        (p) => `
+    const tile = (p) => `
       <div class="shop-tile">
         <h3>${p.name}</h3>
         <p>$${p.price?.toFixed(2) ?? "—"}</p>
@@ -115,11 +113,26 @@ async function renderShopGrid() {
           onclick='addToCart(${JSON.stringify(p)})'>
           Add to Cart
         </button>
-      </div>`
-      )
-      .join("");
+      </div>`;
+
+    // Category name in Square must be exactly "Books" or "Merch"
+    // (case-insensitive) for items to land in the right grid.
+    const books = products.filter((p) => p.category.toLowerCase() === "books");
+    const merch = products.filter((p) => p.category.toLowerCase() === "merch");
+
+    if (booksGrid) {
+      booksGrid.innerHTML = books.length
+        ? books.map(tile).join("")
+        : "<p>No books listed yet.</p>";
+    }
+    if (merchGrid) {
+      merchGrid.innerHTML = merch.length
+        ? merch.map(tile).join("")
+        : "<p>No merch listed yet.</p>";
+    }
   } catch (err) {
-    grid.innerHTML = "<p>Couldn't load products right now. Please refresh.</p>";
+    if (booksGrid) booksGrid.innerHTML = "<p>Couldn't load books right now.</p>";
+    if (merchGrid) merchGrid.innerHTML = "<p>Couldn't load merch right now.</p>";
     console.error(err);
   }
 }
@@ -195,7 +208,7 @@ async function handleCheckout() {
 document.addEventListener("DOMContentLoaded", () => {
   renderCartCount();
   renderCartDrawer();
-  renderShopGrid();
+  loadProducts();
   initSquarePayments();
 
   const checkoutButton = document.getElementById("checkout-button");
