@@ -1,216 +1,83 @@
-// cart.js
-// Handles: loading live products, the cart (stored in localStorage so it
-// survives page reloads), and the embedded Square checkout - all without
-// ever leaving the site.
+// netlify/functions/catalog.js
 //
-// Include this file with: <script src="cart.js" defer></script>
-// It expects these elements to exist somewhere in your HTML:
-//   <div id="shop-grid"></div>              (products render here)
-//   <div id="cart-count"></div>              (shows # items, e.g. in nav)
-//   <div id="cart-drawer"></div>             (cart panel contents)
-//   <div id="card-container"></div>          (Square card form renders here)
-//   <button id="checkout-button">Pay now</button>
+// Pulls live items from your Square catalog (name, price, image, stock)
+// so the website's shop section always matches what's in Square —
+// no manual re-typing of prices or products on the site itself.
+//
+// Requires these environment variables to be set in Netlify:
+//   SQUARE_ACCESS_TOKEN   (secret - from Square Developer Dashboard)
+//   SQUARE_LOCATION_ID    (public - L6PF6R4W1EXCG)
+//   SQUARE_ENVIRONMENT    ("sandbox" while testing, "production" when live)
 
-const CART_KEY = "ppp_cart";
-let squarePayments = null;
-let squareCard = null;
+const { SquareClient, SquareEnvironment } = require("square");
 
-// ---------- Cart storage ----------
-
-function getCart() {
-  return JSON.parse(localStorage.getItem(CART_KEY) || "[]");
-}
-
-function saveCart(cart) {
-  localStorage.setItem(CART_KEY, JSON.stringify(cart));
-  renderCartCount();
-  renderCartDrawer();
-}
-
-function addToCart(product, quantity = 1) {
-  const cart = getCart();
-  const existing = cart.find((line) => line.variationId === product.variationId);
-  if (existing) {
-    existing.quantity += quantity;
-  } else {
-    cart.push({
-      variationId: product.variationId,
-      name: product.name,
-      price: product.price,
-      quantity,
-    });
-  }
-  saveCart(cart);
-}
-
-function updateQuantity(variationId, quantity) {
-  let cart = getCart();
-  if (quantity <= 0) {
-    cart = cart.filter((line) => line.variationId !== variationId);
-  } else {
-    cart.forEach((line) => {
-      if (line.variationId === variationId) line.quantity = quantity;
-    });
-  }
-  saveCart(cart);
-}
-
-function cartTotal() {
-  return getCart().reduce((sum, line) => sum + line.price * line.quantity, 0);
-}
-
-// ---------- Rendering ----------
-
-function renderCartCount() {
-  const el = document.getElementById("cart-count");
-  if (!el) return;
-  const count = getCart().reduce((sum, line) => sum + line.quantity, 0);
-  el.textContent = count;
-}
-
-function renderCartDrawer() {
-  const el = document.getElementById("cart-drawer");
-  if (!el) return;
-  const cart = getCart();
-
-  if (cart.length === 0) {
-    el.innerHTML = "<p>Your cart is empty.</p>";
-    return;
-  }
-
-  el.innerHTML =
-    cart
-      .map(
-        (line) => `
-      <div class="cart-line">
-        <span>${line.name}</span>
-        <input type="number" min="0" value="${line.quantity}"
-          onchange="updateQuantity('${line.variationId}', parseInt(this.value))" />
-        <span>$${(line.price * line.quantity).toFixed(2)}</span>
-      </div>`
-      )
-      .join("") +
-    `<div class="cart-total">Total: $${cartTotal().toFixed(2)}</div>`;
-}
-
-async function loadProducts() {
-  const booksGrid = document.getElementById("books-grid");
-  const merchGrid = document.getElementById("merch-grid");
-  if (booksGrid) booksGrid.innerHTML = "<p>Loading books…</p>";
-  if (merchGrid) merchGrid.innerHTML = "<p>Loading merch…</p>";
-
+exports.handler = async function (event) {
   try {
-    const res = await fetch("/api/catalog");
-    const { products } = await res.json();
+    const client = new SquareClient({
+      token: process.env.SQUARE_ACCESS_TOKEN,
+      environment:
+        process.env.SQUARE_ENVIRONMENT === "production"
+          ? SquareEnvironment.Production
+          : SquareEnvironment.Sandbox,
+    });
 
-    const tile = (p) => `
-      <div class="shop-tile">
-        <h3>${p.name}</h3>
-        <p>$${p.price?.toFixed(2) ?? "—"}</p>
-        <p>${p.inStock === 0 ? "Sold out" : ""}</p>
-        <button
-          ${p.inStock === 0 ? "disabled" : ""}
-          onclick='addToCart(${JSON.stringify(p)})'>
-          Add to Cart
-        </button>
-      </div>`;
+    // 1. Get all catalog items (books + merch)
+    const catalogResponse = await client.catalog.list({ types: "ITEM" });
+    const items = catalogResponse.data || [];
 
-    // Category name in Square must be exactly "Books" or "Merch"
-    // (case-insensitive) for items to land in the right grid.
-    const books = products.filter((p) => p.category.toLowerCase() === "books");
-    const merch = products.filter((p) => p.category.toLowerCase() === "merch");
+    // 1b. Get category names, so we can label each product "Books" or "Merch"
+    const categoryResponse = await client.catalog.list({ types: "CATEGORY" });
+    const categoryMap = {};
+    (categoryResponse.data || []).forEach((cat) => {
+      categoryMap[cat.id] = cat.categoryData?.name || "";
+    });
 
-    if (booksGrid) {
-      booksGrid.innerHTML = books.length
-        ? books.map(tile).join("")
-        : "<p>No books listed yet.</p>";
-    }
-    if (merchGrid) {
-      merchGrid.innerHTML = merch.length
-        ? merch.map(tile).join("")
-        : "<p>No merch listed yet.</p>";
-    }
-  } catch (err) {
-    if (booksGrid) booksGrid.innerHTML = "<p>Couldn't load books right now.</p>";
-    if (merchGrid) merchGrid.innerHTML = "<p>Couldn't load merch right now.</p>";
-    console.error(err);
-  }
-}
+    // 2. Get current inventory counts for every variation in one batch call
+    const variationIds = [];
+    items.forEach((item) => {
+      (item.itemData?.variations || []).forEach((v) => variationIds.push(v.id));
+    });
 
-// ---------- Square Web Payments (checkout) ----------
-
-async function initSquarePayments() {
-  const cardContainer = document.getElementById("card-container");
-  if (!cardContainer || !window.Square) return;
-
-  // NOTE: swap these two values, and swap the <script src> in your HTML
-  // from sandbox.web.squarecdn.com to web.squarecdn.com, when you go live.
-  const appId = "YOUR_SQUARE_APP_ID";
-  const locationId = "YOUR_SQUARE_LOCATION_ID";
-
-  squarePayments = window.Square.payments(appId, locationId);
-  squareCard = await squarePayments.card();
-  await squareCard.attach("#card-container");
-}
-
-async function handleCheckout() {
-  const button = document.getElementById("checkout-button");
-  const cart = getCart();
-
-  if (cart.length === 0) {
-    alert("Your cart is empty.");
-    return;
-  }
-  if (!squareCard) {
-    alert("Payment form isn't ready yet - please wait a moment and try again.");
-    return;
-  }
-
-  button.disabled = true;
-  button.textContent = "Processing…";
-
-  try {
-    const tokenResult = await squareCard.tokenize();
-    if (tokenResult.status !== "OK") {
-      throw new Error(tokenResult.errors?.[0]?.message || "Card error");
+    let inventoryMap = {};
+    if (variationIds.length > 0) {
+      const inventoryResponse = await client.inventory.batchGetCounts({
+        catalogObjectIds: variationIds,
+        locationIds: [process.env.SQUARE_LOCATION_ID],
+      });
+      (inventoryResponse.data || []).forEach((count) => {
+        inventoryMap[count.catalogObjectId] = parseInt(count.quantity || "0", 10);
+      });
     }
 
-    const res = await fetch("/api/checkout", {
-      method: "POST",
+    // 3. Shape a clean, simple product list for the front end
+    const products = items.map((item) => {
+      const data = item.itemData;
+      const variation = (data.variations || [])[0];
+      const priceMoney = variation?.itemVariationData?.priceMoney;
+
+      return {
+        id: item.id,
+        variationId: variation?.id || null,
+        name: data.name,
+        description: data.description || "",
+        price: priceMoney ? priceMoney.amount / 100 : null, // cents -> dollars
+        currency: priceMoney?.currency || "USD",
+        imageId: (data.imageIds || [])[0] || null,
+        inStock: variation ? (inventoryMap[variation.id] ?? null) : null,
+        category: categoryMap[data.categoryId] || "Uncategorized",
+      };
+    });
+
+    return {
+      statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        cart: cart.map((l) => ({ variationId: l.variationId, quantity: l.quantity })),
-        sourceId: tokenResult.token,
-      }),
-    });
-
-    const result = await res.json();
-
-    if (result.success) {
-      localStorage.removeItem(CART_KEY);
-      renderCartCount();
-      renderCartDrawer();
-      alert("Thank you! Your order has been placed.");
-    } else {
-      throw new Error(result.error || "Payment failed");
-    }
+      body: JSON.stringify({ products }),
+    };
   } catch (err) {
-    alert("Something went wrong: " + err.message);
-    console.error(err);
-  } finally {
-    button.disabled = false;
-    button.textContent = "Pay now";
+    console.error("Catalog fetch error:", err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: "Could not load products right now." }),
+    };
   }
-}
-
-// ---------- Init on page load ----------
-
-document.addEventListener("DOMContentLoaded", () => {
-  renderCartCount();
-  renderCartDrawer();
-  loadProducts();
-  initSquarePayments();
-
-  const checkoutButton = document.getElementById("checkout-button");
-  if (checkoutButton) checkoutButton.addEventListener("click", handleCheckout);
-});
+};
