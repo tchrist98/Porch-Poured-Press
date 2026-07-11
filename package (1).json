@@ -1,0 +1,8 @@
+{
+  "name": "porch-poured-press",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "square": "^39.0.0"
+  }
+}
