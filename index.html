@@ -382,7 +382,7 @@
     <span class="go">Say hello <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
   </a>
 
-  <a class="tile full" id="blog" href="#">
+  <a class="tile full" id="blog" href="#blog-section">
     <h3>The Blog</h3>
     <p>Notes from the porch. Sent straight to your inbox if you'd rather read there.</p>
     <span class="go">Read a while <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
@@ -418,6 +418,11 @@
   </button>
 </section>
 
+<section id="blog-section" style="max-width:1140px; margin:4vh auto; padding:0 6vw;">
+  <h2 style="font-family:'Fraunces', serif; font-weight:500; font-size:1.8rem; color:var(--plum-deep); margin-bottom:1.2rem;">The Blog</h2>
+  <div id="blog-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:1.6rem;"></div>
+</section>
+
 <p class="home-line">"I hope you find a piece of home in these pages."</p>
 
 <section class="letter-strip">
@@ -425,8 +430,8 @@
     <h2>Pour another glass.</h2>
     <p>Join the newsletter for all the tea on new releases, blog posts, behind the scenes, and the occasional 3am rabbit hole.</p>
   </div>
-  <form class="letter-form" onsubmit="return false;">
-    <input type="email" placeholder="your email address" required>
+  <form class="letter-form" id="newsletter-form">
+    <input type="email" name="email" placeholder="your email address" required>
     <button type="submit">Subscribe &rarr;</button>
   </form>
 </section>
@@ -444,7 +449,19 @@
     <div id="after-dark-books-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:1.4rem; margin-bottom:3rem;"></div>
 
     <h3 style="font-family:'Fraunces', serif; font-style:italic; font-weight:400; font-size:1.5rem; color:#EAD9C8; margin-bottom:1.2rem;">Merch</h3>
-    <div id="after-dark-merch-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:1.4rem;"></div>
+    <div id="after-dark-merch-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:1.4rem; margin-bottom:3rem;"></div>
+
+    <h3 style="font-family:'Fraunces', serif; font-style:italic; font-weight:400; font-size:1.5rem; color:#EAD9C8; margin-bottom:1.2rem;">From Saylor</h3>
+    <div id="after-dark-blog-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:1.6rem; color:#EAD9C8; margin-bottom:3rem;"></div>
+
+    <div style="max-width:480px; margin:0 auto; text-align:center;">
+      <h3 style="font-family:'Fraunces', serif; font-style:italic; font-weight:400; font-size:1.3rem; color:#EAD9C8; margin-bottom:0.6rem;">Stay a little later.</h3>
+      <p style="color:#C98A9B; font-size:0.85rem; margin-bottom:1rem;">New releases and after-hours updates from Saylor Delahaye.</p>
+      <form id="after-dark-newsletter-form" style="display:flex; gap:0; border-bottom:1px solid rgba(234,217,200,0.45);">
+        <input type="email" name="email" placeholder="your email address" required style="background:transparent; border:none; outline:none; color:#EAD9C8; font-family:'Karla', sans-serif; font-size:0.9rem; padding:0.6rem 0.2rem; flex:1;">
+        <button type="submit" style="background:none; border:none; color:#EAD9C8; font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase; cursor:pointer; padding:0.6rem 0.3rem;">Subscribe &rarr;</button>
+      </form>
+    </div>
   </div>
 </section>
 
@@ -455,7 +472,8 @@
   </div>
 </footer>
 
-<script src="https://sandbox.web.squarecdn.com/v1/square.js"></script>
+<script src="https://web.squarecdn.com/v1/square.js"></script>
 <script src="cart.js" defer></script>
+<script src="blog.js" defer></script>
 </body>
 </html>
