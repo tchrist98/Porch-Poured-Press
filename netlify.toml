@@ -14,3 +14,13 @@
   from = "/api/checkout"
   to = "/.netlify/functions/checkout"
   status = 200
+
+[[redirects]]
+  from = "/api/blog"
+  to = "/.netlify/functions/blog"
+  status = 200
+
+[[redirects]]
+  from = "/api/subscribe"
+  to = "/.netlify/functions/subscribe"
+  status = 200
