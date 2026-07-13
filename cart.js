@@ -163,8 +163,8 @@ async function initSquarePayments() {
 
   // NOTE: swap these two values, and swap the <script src> in your HTML
   // from sandbox.web.squarecdn.com to web.squarecdn.com, when you go live.
-  const appId = "YOUR_SQUARE_APP_ID";
-  const locationId = "YOUR_SQUARE_LOCATION_ID";
+  const appId = "sq0idp-4hjf4-X_4BrlXoaZkdH0Eg";
+  const locationId = "L6PF6R4W1EXCG";
 
   squarePayments = window.Square.payments(appId, locationId);
   squareCard = await squarePayments.card();
