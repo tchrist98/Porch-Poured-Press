@@ -119,6 +119,15 @@ async function loadProducts() {
         </button>
       </div>`;
 
+    // Preview-only tile for After Dark on the daylight page - no button,
+    // not clickable, just a teaser. Full shopping happens once After Dark
+    // gets its own dedicated space.
+    const previewTile = (p) => `
+      <div class="shop-tile" style="cursor:default;">
+        <h3>${p.name}</h3>
+        <p>$${p.price?.toFixed(2) ?? "—"}</p>
+      </div>`;
+
     // Category names in Square must match exactly (case-insensitive):
     // "Books", "Merch", "Books Ad", "Merch Ad"
     const books = products.filter((p) => p.category.toLowerCase() === "books");
