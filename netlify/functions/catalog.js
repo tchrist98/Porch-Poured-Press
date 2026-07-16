@@ -64,7 +64,7 @@ exports.handler = async function (event) {
         currency: priceMoney?.currency || "USD",
         imageId: (data.imageIds || [])[0] || null,
         inStock: variation ? (inventoryMap[variation.id] ?? null) : null,
-        category: categoryMap[data.categoryId] || "Uncategorized",
+        category: categoryMap[data.reportingCategory?.id || (data.categories && data.categories[0]?.id)] || "Uncategorized",
       };
     });
 
