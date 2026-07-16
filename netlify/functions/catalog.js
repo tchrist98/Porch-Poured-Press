@@ -60,7 +60,7 @@ exports.handler = async function (event) {
         variationId: variation?.id || null,
         name: data.name,
         description: data.description || "",
-        price: priceMoney ? priceMoney.amount / 100 : null, // cents -> dollars
+        price: priceMoney ? Number(priceMoney.amount) / 100 : null, // cents -> dollars
         currency: priceMoney?.currency || "USD",
         imageId: (data.imageIds || [])[0] || null,
         inStock: variation ? (inventoryMap[variation.id] ?? null) : null,
