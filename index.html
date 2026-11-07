@@ -624,7 +624,7 @@
 
     window.scrollTo(0, 0);
     try {
-      history.replaceState(null, '', '#' + name);
+    try { history.replaceState(null, '', '#' + name); } catch (e) {};
     } catch (e) {
       // Some sandboxed preview contexts (e.g. srcdoc iframes) block history
       // mutation entirely - safe to ignore, deep-linking just won't work there.
