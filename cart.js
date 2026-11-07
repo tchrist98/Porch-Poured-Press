@@ -135,6 +135,21 @@ async function loadProducts() {
     const afterDarkBooks = products.filter((p) => p.category.toLowerCase() === "books ad");
     const afterDarkMerch = products.filter((p) => p.category.toLowerCase() === "merch ad");
 
+    // Siren's Port gets its own Add to Cart button under its description
+    // on the After Dark Books page (no HTML edit needed - we find the
+    // cover image and add a slot next to the description).
+    const sirens = afterDarkBooks.find((p) => p.name.toLowerCase().includes("siren"));
+    const sirensImg = document.querySelector('img[alt="Siren\'s Port cover"]');
+    if (sirens && sirensImg && !document.getElementById("sirens-port-buy")) {
+      const slot = document.createElement("div");
+      slot.id = "sirens-port-buy";
+      slot.style.cssText = "margin-top:1rem; max-width:220px;";
+      sirensImg.nextElementSibling.appendChild(slot);
+    }
+    const sirensSlot = document.getElementById("sirens-port-buy");
+    if (sirens && sirensSlot) sirensSlot.innerHTML = tile(sirens);
+    const otherAfterDarkBooks = afterDarkBooks.filter((p) => p !== sirens);
+
     if (booksGrid) {
       booksGrid.innerHTML = books.length
         ? books.map(tile).join("")
@@ -146,9 +161,9 @@ async function loadProducts() {
         : "<p>No merch listed yet.</p>";
     }
     if (afterDarkBooksGrid) {
-      afterDarkBooksGrid.innerHTML = afterDarkBooks.length
-        ? afterDarkBooks.map(tile).join("")
-        : "<p>No titles listed yet.</p>";
+      afterDarkBooksGrid.innerHTML = otherAfterDarkBooks.length
+        ? otherAfterDarkBooks.map(tile).join("")
+        : "<p>More titles coming soon.</p>";
     }
     if (afterDarkMerchGrid) {
       afterDarkMerchGrid.innerHTML = afterDarkMerch.length
