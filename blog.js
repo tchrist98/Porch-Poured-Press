@@ -16,7 +16,7 @@
 // starts with "pub_". Or ask Claude to look them up via the beehiiv API
 // once you've shared them.
 const PPP_PUBLICATION_ID = "pub_e278a335-1a5b-4227-9f6d-4565564f24ad";
-const AFTER_DARK_PUBLICATION_ID = "YOUR_AFTER_DARK_PUBLICATION_ID";
+const AFTER_DARK_PUBLICATION_ID = "pub_ff4b6f1f-66f3-4815-957b-e4817ea7a548";
 // ---------------------------------------------------------------------
 
 function formatDate(iso) {
